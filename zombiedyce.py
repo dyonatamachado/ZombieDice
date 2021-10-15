@@ -20,13 +20,13 @@ class Dado:
     def __init__(self, cor):
         if(cor == "VERDE"):
             self.cor = cor
-            self.faces = "CPCTPC"
+            self.faces = ('C','P','C','T','P','C')
         elif(cor == "AMARELO"):
             self.cor = cor
-            self.faces = "TPCTPC"
+            self.faces = ('T','P','C','T','P','C')
         else:
             self.cor = cor
-            self.faces = "TPTCPT"
+            self.faces = ('T','P','T','C','P','T')
 
 # Define objeto Placar que representa o placar dos turnos
 class Placar:
@@ -40,34 +40,169 @@ class Placar:
 def limpartela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-# Escreve a Mensagem Inicial e define a quantidade de jogadores
+# Função para escrever a Mensagem Inicial
+def mostrar_mensagem_inicial():
+    print("Bem-vindo ao Zombie Dice")
+    print("************************")
+    print("\n\n\n")
 
-print("Bem-vindo ao Zombie Dice")
-print("************************")
-print("\n\n\n")
+# Função para definir a quantidade de jogadores
+def definir_quantidade_jogadores(limpartela):
+    qtdJogadores = 0
 
-qtdJogadores = 0
+    while(qtdJogadores < 2):
+        print("Informe a quantidade de jogadores")
+        qtdJogadores = int(input())
+        limpartela()
 
-while(qtdJogadores < 2):
+        if(qtdJogadores < 2):
+            print("Informe ao menos dois jogadores")
+    return qtdJogadores
 
-    print("Informe a quantidade de jogadores")
-    qtdJogadores = int(input())
+# Função para criar e armazenar jogadores em lista
+def criar_e_armazenar_jogadores(limpartela, qtdJogadores):
+    listaJogadores = []
+
+    for i in range(0, qtdJogadores):
+        indice = i + 1
+        print("Informe o nome do {}º Jogador".format(indice))
+        nome = input()
+        limpartela()
+
+        jogador = Jogador(indice, nome)
+        listaJogadores.append(jogador)
+    return listaJogadores
+
+def criar_dados_e_listas_para_manipulalos():
+    dadoVermelho = Dado("VERMELHO")
+    dadoAmarelo = Dado("AMARELO")
+    dadoVerde = Dado("VERDE")
+
+    listaDados = [dadoVerde, dadoVerde, dadoVerde, dadoVerde, dadoVerde, dadoVerde,
+            dadoAmarelo, dadoAmarelo, dadoAmarelo, dadoAmarelo, 
+            dadoVermelho, dadoVermelho, dadoVermelho]
+        
+    # Lista que armazena os dados que vão sendo sorteados
+    listaDadosRetirados = []
+
+    # Lista auxiliar que armazena temporariamente os dados que tiveram
+    # como resultado de sorteio a face "PASSOS"
+    listaDadosQueFoiSorteadoPassos = []
+
+    return listaDados,listaDadosRetirados,listaDadosQueFoiSorteadoPassos
+
+def retirar_dados(listaDados, listaDadosRetirados):
+    numSorteado = random.randrange(0,len(listaDados))
+    dadoRetirado = listaDados.pop(numSorteado)
+    listaDadosRetirados.append(dadoRetirado)
+    print("Você recebeu um dado {}".format(dadoRetirado.cor))
+
+def sortear_faces(dado):
+    faces = dado.faces
+    faceSorteada = random.choice(faces)
+    return faceSorteada
+
+# Funções get_tiro, get_cerebro e get_passos são responsáveis por receber o 
+# resultado do sorteio do dado e aplicar as consequências
+def get_tiro(placar, listaDadosRetirados, dado):
+    print("Você levou um tiro com o dado {}".format(dado.cor))
+    listaDadosRetirados.pop(0)
+    placar.tiros += 1
+
+def get_cerebro(placar, listaDadosRetirados, dado):
+    print("Você comeu um cérebro com o dado {}".format(dado.cor))
+    listaDadosRetirados.pop(0)
+    placar.cerebros += 1
+
+def get_passos(placar, listaDadosRetirados, listaDadosQueFoiSorteadoPassos, dado):
+    print("Um humano fugiu de você com o dado {}".format(dado.cor))
+    placar.passos += 1
+    dadoQueFoiSorteadoPassos = listaDadosRetirados.pop(0)
+    listaDadosQueFoiSorteadoPassos.append(dadoQueFoiSorteadoPassos)
+
+def encerrar_turno_caso_jogador_leve_mais_de_dois_tiros(limpartela, mensagem_tecle_enter):
+    print("Que pena você levou 3 ou mais tiros e não pontuou nesse turno.")
+    input(mensagem_tecle_enter)
     limpartela()
 
-    if(qtdJogadores < 2):
-        print("Informe ao menos dois jogadores")
+def encerrar_turno_caso_jogador_coma_todos_os_cerebros(limpartela, mensagem_tecle_enter, jogador):
+    print("Uau, você comeu todos os cérebros possíveis e atingiu a pontuação máxima.")
+    print("Você tem 13 pontos! Portanto agora é a vez do próximo jogador.")
+    input(mensagem_tecle_enter)
+    limpartela()
+    jogador.pontos = 13
 
-# Cria lista para armazenar jogadores. Inicializa jogadores e adiciona em lista
-listaJogadores = []
+def perguntar_se_jogador_deseja_continuar_seu_turno(limpartela, jogador):
+    print("{}, vocẽ quer continuar a lançar os dados? Digite S para SIM ou N para NÃO".format(jogador.nome))
+    resposta = input().upper()
+    limpartela()
+    return resposta
 
-for i in range(0, qtdJogadores):
-    indice = i + 1
-    print("Informe o nome do {}º Jogador".format(indice))
-    nome = input()
+def encerrar_turno_caso_jogador_escolha_encerrar(limpartela, mensagem_tecle_enter, jogador, placar):
+    jogador.pontos += placar.cerebros
+    print("Sua pontuação somando todas os turnos disputados até o momento é: {}".format(jogador.pontos))
+    print("\nVamos continuar com o próximo jogador\n")
+    print(mensagem_tecle_enter)
+    input()
     limpartela()
 
-    jogador = Jogador(indice, nome)
-    listaJogadores.append(jogador)
+def guardar_dado_que_teve_resultado_passos_para_jogar_novamente(placar, listaDadosQueFoiSorteadoPassos):
+    listaDadosRetirados = listaDadosQueFoiSorteadoPassos.copy()
+    listaDadosQueFoiSorteadoPassos = []
+    placar.passos = 0
+    return listaDadosRetirados, listaDadosQueFoiSorteadoPassos
+
+def gerenciar_e_imprimir_pontuacao_geral(listaJogadores, listaJogadoresComPontuacaoMaxima):
+    print("PONTUAÇÂO")
+    print("*********")
+    
+    for jogador in listaJogadores:
+        print("#0{} {}: {} ponto(s)".format(jogador.indice, jogador.nome, jogador.pontos))
+    
+def avaliar_se_jogador_esta_com_pontuacao_maxima(listaJogadores, listaJogadoresComPontuacaoMaxima):
+    for jogador in listaJogadores:
+        if(jogador.pontos == 13):
+            armazenar_jogadores_com_pontuacao_maxima(listaJogadores, listaJogadoresComPontuacaoMaxima, jogador)
+
+def armazenar_jogadores_com_pontuacao_maxima(listaJogadores, listaJogadoresComPontuacaoMaxima, jogador):
+    indiceJogador = listaJogadores.index(jogador)
+    jogadorComPontuacaoMaxima = listaJogadores[indiceJogador]
+    listaJogadoresComPontuacaoMaxima.append(jogadorComPontuacaoMaxima)
+
+def imprimir_ganhador_caso_haja(limpartela, listaJogadoresComPontuacaoMaxima):
+    teste_haganhador = True
+    print("Parabéns {} você é o ganhador. O melhor zumbi da cidade.".format(listaJogadoresComPontuacaoMaxima[0].nome))
+    print("Tecle qualquer tecla para encerrar.")
+    input()
+    limpartela()
+    return teste_haganhador
+
+def imprimir_jogadores_com_pontuacao_maxima_e_iniciar_turno_desempate(limpartela, mensagem_tecle_enter, listaJogadoresComPontuacaoMaxima):
+    print("Os seguintes jogadores atingiram a pontuação máxima: ")
+
+    for jogador in listaJogadoresComPontuacaoMaxima:
+        print("Jogador #0{0}: {1}".format(jogador.indice, jogador.nome))
+        jogador.pontos = 0
+        
+    listaJogadores = listaJogadoresComPontuacaoMaxima.copy()
+    listaJogadoresComPontuacaoMaxima = []
+
+    print("\nSuas pontuações serão resetadas para uma rodada de desempate")
+    input(mensagem_tecle_enter)
+    limpartela()
+
+    return listaJogadores, listaJogadoresComPontuacaoMaxima
+
+def continuar_jogo_caso_nao_haja_ganhador(limpartela):
+    print("Terminamos o turno e ainda não há ganhador")
+    print("Cada jogador poderá jogar novamente os dados, mas lembre-se que você não poderá acumular mais do que 13 pontos.")
+    input("Tecle para continuar")
+    limpartela()
+
+mensagem_tecle_enter = "Tecle ENTER para continuar"
+mostrar_mensagem_inicial()
+qtdJogadores = definir_quantidade_jogadores(limpartela)
+listaJogadores = criar_e_armazenar_jogadores(limpartela, qtdJogadores)
 
 # Cria variável e lista para auxiliar controle de ganhadores
 haganhador = False
@@ -75,8 +210,9 @@ listaJogadoresComPontuacaoMaxima = []
 
 # Inicia o jogo
 print("Vamos começar o jogo")
-input("Tecle Enter para continuar")
+input(mensagem_tecle_enter)
 limpartela()
+
 
 while(not haganhador):
 
@@ -89,25 +225,11 @@ while(not haganhador):
         # Cria placar do turno
         placar = Placar()
 
-        # Cria dados e listas necessárias para manipulá-los
-        dadoVermelho = Dado("VERMELHO")
-        dadoAmarelo = Dado("AMARELO")
-        dadoVerde = Dado("VERDE")
-
-        # Lista de todos os 13 dados do jogo
-        listaDados = [dadoVerde, dadoVerde, dadoVerde, dadoVerde, dadoVerde, dadoVerde,
-            dadoAmarelo, dadoAmarelo, dadoAmarelo, dadoAmarelo, 
-            dadoVermelho, dadoVermelho, dadoVermelho]
-        
-        # Lista que armazena os dados que vão sendo sorteados
-        listaDadosRetirados = []
-
-        # Lista auxiliar que armazena temporariamente os dados que tiveram
-        # como resultado de sorteio a face "PASSOS"
-        listaDadosQueFoiSorteadoPassos = []
+        # Chama função para criar dados e listas que os manipulam
+        listaDados, listaDadosRetirados, listaDadosQueFoiSorteadoPassos = criar_dados_e_listas_para_manipulalos()
 
         # Variavel usada para verificar quantos dados retirar para sorteio
-        qtdDadosARetirar = 3 
+        qtdDadosARetirar = 3
 
         while(True):
             
@@ -121,34 +243,24 @@ while(not haganhador):
 
             for i in range(0, qtdDadosARetirar):
 
-                numSorteado = random.randrange(0,len(listaDados))
-                dadoRetirado = listaDados.pop(numSorteado)
-                listaDadosRetirados.append(dadoRetirado)
-                print("Você recebeu um dado {}".format(dadoRetirado.cor))
+                retirar_dados(listaDados, listaDadosRetirados)
             
             # Sorteia a face dos dados e retorna resultado em tela
             print("\nAgora é a vez de rolar os dados.")
             input("{} tecle para continuar\n".format(jogador.nome))
             limpartela()
 
+            # Os índices estão todos com o valor 0 pois trabalho com estrutra de fila (FIFO)
             while(len(listaDadosRetirados) > 0):
-                dado = listaDadosRetirados[0] # Estrutura de Fila(FIFO)
-                faces = dado.faces
-                faceSorteada = random.choice(faces)
+                dado = listaDadosRetirados[0]
+                faceSorteada = sortear_faces(dado)
 
                 if(faceSorteada == "T"):
-                    print("Você levou um tiro com o dado {}".format(dado.cor))
-                    listaDadosRetirados.pop(0) # Estrutura de Fila(FIFO)
-                    placar.tiros += 1
+                    get_tiro(placar, listaDadosRetirados, dado)
                 elif(faceSorteada == "C"):
-                    print("Você comeu um cérebro com o dado {}".format(dado.cor))
-                    listaDadosRetirados.pop(0) # Estrutura de Fila(FIFO)
-                    placar.cerebros += 1
+                    get_cerebro(placar, listaDadosRetirados, dado)
                 else:
-                    print("Um humano fugiu de você com o dado {}".format(dado.cor))
-                    placar.passos += 1
-                    dadoQueFoiSorteadoPassos = listaDadosRetirados.pop(0) # Estrutura de Fila(FIFO)
-                    listaDadosQueFoiSorteadoPassos.append(dadoQueFoiSorteadoPassos)
+                    get_passos(placar, listaDadosRetirados, listaDadosQueFoiSorteadoPassos, dado)
             
             print("\nTecle para continuar")
             input()
@@ -158,33 +270,21 @@ while(not haganhador):
             print("\nSeu placar atual do turno é:")
             print("Cérebros: {}\nTiros: {}\nPassos: {}".format(placar.cerebros, placar.tiros, placar.passos))
 
-            input("Tecle ENTER para continuar")
+            input(mensagem_tecle_enter)
             limpartela()
             
-            # Jogador levou 3 tiros no turno
-            if(placar.tiros > 2): # Passa para o próximo jogador direto
-                print("Que pena você levou 3 ou mais tiros e não pontuou nesse turno.")
-                input("Tecle ENTER para continuar")
-                limpartela()
-                break
             
-            # Considera pontuação do jogador somado ao número de cérebros do turno atual
-            # para verificar se jogador já atingiu placar máximo
-            # não permite que jogador tenha mais que 13 pontos
+            if(placar.tiros > 2): # Passa para o próximo jogador direto
+                encerrar_turno_caso_jogador_leve_mais_de_dois_tiros(limpartela, mensagem_tecle_enter)
+                break
             if((jogador.pontos + placar.cerebros) >= 13): 
-                print("Uau, você comeu todos os cérebros possíveis e atingiu a pontuação máxima.")
-                print("Você tem 13 pontos! Portanto agora é a vez do próximo jogador.")
-                input("Tecle ENTER para continuar")
-                limpartela()
-                jogador.pontos = 13
+                encerrar_turno_caso_jogador_coma_todos_os_cerebros(limpartela, mensagem_tecle_enter, jogador)
                 break
             
             # Verifica se jogador quer continuar rolando os dados no turno atual
             resposta = "C"
             while(resposta != "S" and resposta != "N" ):
-                print("{}, vocẽ quer continuar a lançar os dados? Digite S para SIM ou N para NÃO".format(jogador.nome))
-                resposta = input().upper()
-                limpartela()
+                resposta = perguntar_se_jogador_deseja_continuar_seu_turno(limpartela, jogador)
             
             if(resposta == "S"):
                 
@@ -197,11 +297,10 @@ while(not haganhador):
                     for dado in listaDadosQueFoiSorteadoPassos:
                         print(dado.cor)
 
-                    listaDadosRetirados = listaDadosQueFoiSorteadoPassos.copy()
-                    listaDadosQueFoiSorteadoPassos = []
-                    placar.passos = 0
+                    listaDadosRetirados, listaDadosQueFoiSorteadoPassos = guardar_dado_que_teve_resultado_passos_para_jogar_novamente(placar, listaDadosQueFoiSorteadoPassos)
 
-                    print("\nTecle para continuar")
+                    print()
+                    print(mensagem_tecle_enter)
                     input()
                     limpartela()
 
@@ -213,52 +312,21 @@ while(not haganhador):
                 if(len(listaDados) < qtdDadosARetirar):
                     qtdDadosARetirar = len(listaDados)       
             else:
-                jogador.pontos += placar.cerebros
-                print("Sua pontuação somando todas os turnos disputados até o momento é: {}".format(jogador.pontos))
-                print("\nVamos continuar com o próximo jogador\n")
-                print("Tecle Enter para continuar")
-                input()
-                limpartela()
+                encerrar_turno_caso_jogador_escolha_encerrar(limpartela, mensagem_tecle_enter, jogador, placar)
                 break
     
     # Mostra pontuação geral até o momento e armazena jogadores que tenham
     # atingido a pontuação máxima
-    print("PONTUAÇÂO")
-    print("*********")
-    for jogador in listaJogadores:
-        print("#0{} {}: {} ponto(s)".format(jogador.indice, jogador.nome, jogador.pontos))
-        if(jogador.pontos == 13):
-            indiceJogador = listaJogadores.index(jogador)
-            jogadorComPontuacaoMaxima = listaJogadores.pop(indiceJogador)
-            listaJogadoresComPontuacaoMaxima.append(jogadorComPontuacaoMaxima)
+    gerenciar_e_imprimir_pontuacao_geral(listaJogadores, listaJogadoresComPontuacaoMaxima)
+    avaliar_se_jogador_esta_com_pontuacao_maxima(listaJogadores, listaJogadoresComPontuacaoMaxima)
     
-    input("Tecle para continuar\n")
+    input(mensagem_tecle_enter)
     limpartela()
     
-    # Verifica se há ganhador ou jogadores empatados com pontuação máxima, 
-    # caso haja empate, reseta a pontuação e inicia rodada de desempate apenas
-    # com os jogadores que atingiram pontuação máxima
+    # Controla se há ganhadores
     if(len(listaJogadoresComPontuacaoMaxima) == 1):
-        haganhador = True
-        print("Parabéns {} você é o ganhador. O melhor zumbi da cidade.".format(listaJogadoresComPontuacaoMaxima[0].nome))
-        print("Tecle qualquer tecla para encerrar.")
-        input()
-        limpartela()
+        haganhador = imprimir_ganhador_caso_haja(limpartela, listaJogadoresComPontuacaoMaxima)
     elif(len(listaJogadoresComPontuacaoMaxima) > 1):
-        print("Os seguintes jogadores atingiram a pontuação máxima: ")
-
-        for jogador in listaJogadoresComPontuacaoMaxima:
-            print("Jogador #0{0}: {1}".format(jogador.indice, jogador.nome))
-            jogador.pontos = 0
-        
-        listaJogadores = listaJogadoresComPontuacaoMaxima.copy()
-        listaJogadoresComPontuacaoMaxima = []
-
-        print("\nSuas pontuações serão resetadas para uma rodada de desempate")
-        input("Tecle para continuar")
-        limpartela()
+        listaJogadores, listaJogadoresComPontuacaoMaxima = imprimir_jogadores_com_pontuacao_maxima_e_iniciar_turno_desempate(limpartela, mensagem_tecle_enter, listaJogadoresComPontuacaoMaxima)
     else:
-        print("Terminamos o turno e ainda não há ganhador")
-        print("Cada jogador poderá jogar novamente os dados, mas lembre-se que você não poderá acumular mais do que 13 pontos.")
-        input("Tecle para continuar")
-        limpartela()
+        continuar_jogo_caso_nao_haja_ganhador(limpartela)
